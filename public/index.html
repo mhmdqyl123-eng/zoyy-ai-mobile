@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#212121">
+<title>Zoyy AI</title>
+<style>
+*{box-sizing:border-box}
+:root{
+ --bg:#212121;--side:#171717;--panel:#2f2f2f;
+ --text:#ececec;--muted:#a1a1aa;--accent:#9b87f5;
+}
+body{
+ margin:0;background:var(--bg);color:var(--text);
+ font-family:Arial,sans-serif;height:100dvh;overflow:hidden;
+}
+button,textarea{font:inherit}
+button{cursor:pointer}
+.app{display:flex;height:100dvh}
+.sidebar{
+ width:275px;background:var(--side);padding:16px;
+ display:flex;flex-direction:column;flex-shrink:0;
+ transition:transform .25s;z-index:5;
+}
+.brand{
+ font-size:22px;font-weight:bold;padding:10px 5px 22px;
+ color:#c4b5fd;
+}
+.brand span{color:#fff}
+.newchat{
+ background:#252525;border:1px solid #414141;color:white;
+ border-radius:12px;padding:13px;text-align:right;
+ width:100%;margin-bottom:18px;
+}
+.newchat:active,.history button:active{background:#383838}
+.side-label{font-size:12px;color:var(--muted);padding:10px 5px}
+.history{overflow:auto;flex:1}
+.history button{
+ display:block;width:100%;text-align:right;
+ color:#ddd;background:transparent;border:0;
+ padding:12px 10px;border-radius:9px;
+ white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.history button.active{background:#303030}
+.profile{
+ border-top:1px solid #333;padding-top:15px;
+ font-size:13px;line-height:1.7;color:#c4b5fd;
+}
+.profile strong{color:white;display:block}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{
+ height:62px;display:flex;align-items:center;
+ justify-content:space-between;padding:0 20px;
+ border-bottom:1px solid #333;
+}
+.menu{
+ background:transparent;border:0;color:white;
+ font-size:23px;padding:7px;
+}
+.status{font-size:12px;color:#9ca3af}
+.chat-area{
+ flex:1;overflow-y:auto;width:100%;
+ max-width:850px;margin:auto;padding:25px 22px 35px;
+}
+.welcome{text-align:center;margin:11vh auto 35px}
+.logo-circle{
+ width:58px;height:58px;border-radius:50%;
+ background:#343047;color:#c4b5fd;
+ display:grid;place-items:center;font-size:27px;
+ margin:0 auto 20px;
+}
+.welcome h1{font-size:27px;margin:0 0 12px}
+.welcome p{color:var(--muted);font-size:14px}
+.suggestions{
+ display:grid;grid-template-columns:1fr 1fr;
+ gap:10px;margin:25px auto;max-width:600px;
+}
+.suggestion{
+ background:transparent;border:1px solid #444;
+ border-radius:13px;padding:15px;text-align:right;
+ color:#eee;
+}
+.suggestion small{display:block;color:var(--muted);margin-top:7px}
+.messages{display:flex;flex-direction:column;gap:23px}
+.message{display:flex;flex-direction:column;gap:8px;max-width:90%}
+.message.user{align-self:flex-start;align-items:flex-start}
+.message.ai{align-self:stretch;align-items:flex-start}
+.message .bubble{
+ padding:13px 16px;border-radius:17px;
+ line-height:1.85;white-space:pre-wrap;overflow-wrap:anywhere;
+}
+.user .bubble{background:#303030}
+.ai .bubble{background:transparent;padding-right:3px}
+.message .who{font-size:12px;color:var(--muted)}
+.composer-wrap{
+ padding:12px 18px 17px;
+ width:100%;max-width:850px;margin:0 auto;
+}
+.composer{
+ background:#303030;border:1px solid #484848;
+ border-radius:25px;padding:10px 12px;
+ display:flex;align-items:flex-end;gap:10px;
+}
+#question{
+ flex:1;min-width:0;max-height:150px;min-height:35px;
+ resize:none;background:transparent;color:white;
+ border:0;outline:0;padding:8px;font-size:16px;
+}
+#question::placeholder{color:#aaa}
+.send{
+ width:40px;height:40px;border:0;border-radius:50%;
+ background:#eee;color:#171717;font-size:21px;
+ display:grid;place-items:center;flex-shrink:0;
+}
+.image-btn{width:40px;height:40px;border:0;border-radius:50%;background:#444;color:white;font-size:20px;cursor:pointer;flex-shrink:0}.image-btn:hover{background:#555}
+.send:disabled{opacity:.4}
+.note{text-align:center;color:#888;font-size:11px;margin-top:10px}
+.overlay{display:none}
+@media(max-width:700px){
+ .sidebar{
+  position:fixed;right:0;top:0;bottom:0;
+  transform:translateX(105%);width:min(290px,85vw);
+ }
+ .sidebar.open{transform:translateX(0)}
+ .overlay.show{
+  display:block;position:fixed;inset:0;
+  background:#0009;z-index:4;
+ }
+ .topbar{padding:0 12px}
+ .chat-area{padding:20px 15px}
+ .welcome{margin:10vh auto 25px}
+ .welcome h1{font-size:23px}
+ .suggestions{grid-template-columns:1fr}
+ .message{max-width:96%}
+ .composer-wrap{padding:10px 10px 13px}
+}
+
+.developer-credit {
+  margin: 12px auto 0;
+  text-align: center;
+  color: #c4b5fd;
+  font-size: 12px;
+  letter-spacing: 1px;
+  font-weight: bold;
+  opacity: .9;
+}
+
+
+.account-box{
+ display:flex;
+ flex-direction:column;
+ gap:8px;
+ padding:12px;
+ margin-top:12px;
+ border:1px solid #383838;
+ border-radius:12px;
+ background:#202020;
+}
+.account-box #authStatus{
+ color:#c4b5fd;
+ font-size:13px;
+ margin-bottom:4px;
+}
+.account-box input{
+ width:100%;
+ padding:10px;
+ border:1px solid #444;
+ border-radius:8px;
+ background:#303030;
+ color:#fff;
+ outline:none;
+}
+.account-box button{
+ width:100%;
+ padding:9px;
+ border:0;
+ border-radius:8px;
+ background:#7663d8;
+ color:white;
+ font-size:13px;
+}
+.account-box button:hover{background:#8b78ed}
+
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+const SUPABASE_URL = "https://uivqqamjocoxznnxxdga.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_4o5PRm63Vul0OsRKU_HyNA_risEFrI4";
+const sbClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY
+);
+</script>
+
+</head>
+<body>
+<div class="app">
+ <aside class="sidebar" id="sidebar">
+  <div class="brand">✦ AI <span>MASTER</span></div>
+  <button class="newchat" onclick="newChat()">＋ محادثة جديدة</button>
+  <div class="side-label">المحادثات السابقة</div>
+  <div class="history" id="history"></div>
+  <div class="account-box" id="accountBox">
+   <div id="authStatus">غير مسجل الدخول</div>
+   <input id="authEmail" type="email" placeholder="البريد الإلكتروني">
+   <input id="authPassword" type="password" placeholder="كلمة المرور">
+   <button type="button" onclick="signUp()">إنشاء حساب</button>
+   <button type="button" onclick="signIn()">تسجيل الدخول</button>
+   <button type="button" onclick="resetPassword()">استعادة كلمة المرور</button>
+   <button type="button" onclick="signOut()">تسجيل الخروج</button>
+  </div>
+  <div class="profile">
+   <strong>DEVELOPED BY</strong>
+   MOHAMMED AQEEL
+  </div>
+ </aside>
+
+ <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+ <section class="main">
+  <header class="topbar">
+   <button class="menu" onclick="toggleSidebar()" aria-label="القائمة">☰</button>
+   <strong>Zoyy AI</strong>
+   <span class="status">● Gemini متصل</span>
+  </header>
+
+  <main class="chat-area" id="chatArea">
+   <section class="welcome" id="welcome">
+    <div class="logo-circle">✦</div>
+    <h1>بماذا أستطيع مساعدتك؟</h1>
+    <div class="developer-credit">PROGRAMMED BY MOHAMMED AQEEL</div>
+    <p>مرحباً بك في Zoyy AI، مساعدك الذكي.</p>
+    <div class="suggestions">
+     <button class="suggestion" onclick="suggest('علّمني البرمجة من الصفر')">
+      💻 تعلّم البرمجة
+      <small>ابدأ رحلتك في عالم البرمجة</small>
+     </button>
+     <button class="suggestion" onclick="suggest('اشرح لي موضوعاً علمياً بطريقة سهلة')">
+      🎓 التعلّم والدراسة
+      <small>افهم المواضيع بطريقة مبسطة</small>
+     </button>
+     <button class="suggestion" onclick="suggest('ساعدني في ابتكار فكرة مشروع')">
+      💡 ابتكار الأفكار
+      <small>اكتشف أفكاراً ومشاريع جديدة</small>
+     </button>
+     <button class="suggestion" onclick="suggest('اكتب لي نصاً إبداعياً')">
+      ✍️ الكتابة والإبداع
+      <small>اكتب ونظّم أفكارك</small>
+     </button>
+    </div>
+   </section>
+   <div class="messages" id="messages"></div>
+  </main>
+
+  <div class="composer-wrap">
+   <div id="imagePreview" style="display:none;gap:8px;flex-wrap:wrap;margin-bottom:10px"></div>
+   <div class="composer">
+    <input id="imageInput" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden onchange="handleImages(event)">
+    <button type="button" class="image-btn" onclick="document.getElementById(&apos;imageInput&apos;).click()">📎</button>
+    <textarea id="question" rows="1"
+     placeholder="اسأل Zoyy AI أي شيء..."
+     onkeydown="handleKey(event)"></textarea>
+    <button class="send" id="sendBtn" onclick="send()">↑</button>
+   </div>
+   <div class="note">قد يخطئ الذكاء الاصطناعي، تحقق من المعلومات المهمة.</div>
+  </div>
+ </section>
+</div>
+
+<script>
+let chats=[];
+let activeId=null;
+let waiting=false;
+
+try{
+ chats=JSON.parse(localStorage.getItem('aimaster_chats')||'[]');
+ if(!Array.isArray(chats)) chats=[];
+}catch(e){chats=[]}
+
+function save(){
+ try{localStorage.setItem('aimaster_chats',JSON.stringify(chats))}
+ catch(e){console.log('تعذر حفظ المحادثات')}
+}
+
+function newChat(){
+ activeId=null;
+ document.getElementById('messages').innerHTML='';
+ document.getElementById('welcome').style.display='block';
+ document.getElementById('question').value='';
+ renderHistory();
+ closeSidebar();
+}
+
+function currentChat(){
+ let chat=chats.find(c=>c.id===activeId);
+ if(!chat){
+  chat={id:Date.now().toString(),title:'محادثة جديدة',messages:[]};
+  chats.unshift(chat);
+  activeId=chat.id;
+ }
+ return chat;
+}
+
+function renderHistory(){
+ const box=document.getElementById('history');
+ box.innerHTML='';
+ chats.forEach(chat=>{
+  const btn=document.createElement('button');
+  btn.textContent='💬 '+chat.title;
+  btn.className=chat.id===activeId?'active':'';
+  btn.onclick=()=>openChat(chat.id);
+  box.appendChild(btn);
+ });
+}
+
+function openChat(id){
+ activeId=id;
+ const chat=chats.find(c=>c.id===id);
+ if(!chat)return;
+ document.getElementById('welcome').style.display='none';
+ const area=document.getElementById('messages');
+ area.innerHTML='';
+ chat.messages.forEach(m=>addMessage(m.role,m.text,false));
+ renderHistory();
+ closeSidebar();
+}
+
+function addMessage(role,text,scroll=true){
+ const area=document.getElementById('messages');
+ const item=document.createElement('div');
+ item.className='message '+(role==='user'?'user':'ai');
+ const who=document.createElement('div');
+ who.className='who';
+ who.textContent=role==='user'?'أنت':'✦ Zoyy AI';
+ const bubble=document.createElement('div');
+ bubble.className='bubble';
+ bubble.textContent=text;
+ item.append(who,bubble);
+ area.appendChild(item);
+ if(scroll)document.getElementById('chatArea').scrollTop=
+  document.getElementById('chatArea').scrollHeight;
+ return bubble;
+}
+
+function suggest(text){
+ document.getElementById('question').value=text;
+ send();
+}
+
+function handleKey(e){
+ if(e.key==='Enter'&&!e.shiftKey){
+  e.preventDefault();send();
+ }
+}
+
+let selectedImages=[];
+
+function handleImages(event){
+ const files=Array.from(event.target.files||[]);
+ const preview=document.getElementById("imagePreview");
+ const allowed=["image/jpeg","image/png","image/webp"];
+ if(selectedImages.length+files.length>4){
+  alert("يمكنك اختيار 4 صور كحد أقصى");
+  event.target.value="";
+  return;
+ }
+ for(const file of files){
+  if(!allowed.includes(file.type)){alert("نوع الصورة غير مدعوم");continue;}
+  if(file.size>1000000){alert("حجم كل صورة يجب أن يكون أقل من 1 ميغابايت");continue;}
+  selectedImages.push(file);
+ }
+ preview.innerHTML="";
+ preview.style.display=selectedImages.length?"flex":"none";
+ selectedImages.forEach((file,index)=>{
+  const wrap=document.createElement("div");
+  wrap.style.cssText="position:relative";
+  const img=document.createElement("img");
+  img.src=URL.createObjectURL(file);
+  img.style.cssText="width:65px;height:65px;object-fit:cover;border-radius:10px";
+  const remove=document.createElement("button");
+  remove.textContent="×";
+  remove.type="button";
+  remove.style.cssText="position:absolute;top:-7px;right:-7px;border:0;border-radius:50%;width:22px;height:22px;background:#d33;color:white";
+  remove.onclick=()=>{selectedImages.splice(index,1);renderImagePreview();};
+  wrap.append(img,remove);
+  preview.appendChild(wrap);
+ });
+ event.target.value="";
+}
+
+function renderImagePreview(){
+ const preview=document.getElementById("imagePreview");
+ preview.innerHTML="";
+ preview.style.display=selectedImages.length?"flex":"none";
+ selectedImages.forEach((file,index)=>{
+  const wrap=document.createElement("div");
+  wrap.style.cssText="position:relative";
+  const img=document.createElement("img");
+  img.src=URL.createObjectURL(file);
+  img.style.cssText="width:65px;height:65px;object-fit:cover;border-radius:10px";
+  const remove=document.createElement("button");
+  remove.textContent="×";
+  remove.type="button";
+  remove.style.cssText="position:absolute;top:-7px;right:-7px;border:0;border-radius:50%;width:22px;height:22px;background:#d33;color:white";
+  remove.onclick=()=>{selectedImages.splice(index,1);renderImagePreview();};
+  wrap.append(img,remove);
+  preview.appendChild(wrap);
+ });
+}
+
+async function send(){
+ if(waiting)return;
+ const input=document.getElementById('question');
+ const q=input.value.trim();
+ const imageFiles=selectedImages.slice();
+ if(!q && imageFiles.length===0)return;
+
+ input.value='';
+ input.style.height='auto';
+ document.getElementById('welcome').style.display='none';
+
+ const chat=currentChat();
+ chat.messages.push({role:'user',text:q||'📷 صور مرفقة'});
+ if(chat.messages.length===1)chat.title=q.slice(0,35);
+ addMessage('user',q||'📷 صور مرفقة');
+ const loading=addMessage('ai','⏳ جاري التفكير والرد...');
+ save();
+ renderHistory();
+
+ waiting=true;
+ document.getElementById('sendBtn').disabled=true;
+
+ try{
+  const images=await Promise.all(imageFiles.map(file=>new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve({mimeType:file.type,data:reader.result});reader.onerror=()=>reject(new Error("تعذر قراءة الصورة"));reader.readAsDataURL(file);}))); 
+  const response=await fetch('/.netlify/functions/chat',{
+   method:'POST',
+   headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({message:q,images})
+  });
+  const data=await response.json();
+  if(!response.ok)throw new Error(data.error||'حدث خطأ في الاتصال');
+  selectedImages=[];renderImagePreview();
+  const reply=data.reply||'لم يصل رد من Gemini';
+  loading.textContent=reply;
+  chat.messages.push({role:'ai',text:reply});
+ }catch(error){
+  loading.textContent='❌ '+error.message;
+  chat.messages.push({role:'ai',text:'❌ '+error.message});
+ }
+ save();
+ waiting=false;
+ document.getElementById('sendBtn').disabled=false;
+ input.focus();
+}
+
+function toggleSidebar(){
+ document.getElementById('sidebar').classList.toggle('open');
+ document.getElementById('overlay').classList.toggle('show');
+}
+function closeSidebar(){
+ document.getElementById('sidebar').classList.remove('open');
+ document.getElementById('overlay').classList.remove('show');
+}
+
+renderHistory();
+if(chats.length){
+ openChat(chats[0].id);
+}
+document.getElementById('question').addEventListener('input',function(){
+ this.style.height='auto';
+ this.style.height=Math.min(this.scrollHeight,150)+'px';
+});
+
+async function signUp(){
+ const email=document.getElementById('authEmail').value.trim();
+ const password=document.getElementById('authPassword').value;
+ const status=document.getElementById('authStatus');
+
+ if(!email || !password){
+  status.textContent='أدخل البريد الإلكتروني وكلمة المرور';
+  return;
+ }
+ if(password.length < 6){
+  status.textContent='كلمة المرور يجب أن تكون 6 أحرف على الأقل';
+  return;
+ }
+
+ status.textContent='جاري إنشاء الحساب...';
+ const {data,error}=await sbClient.auth.signUp({email,password});
+
+ if(error){
+  status.textContent='تعذر إنشاء الحساب: '+error.message;
+  return;
+ }
+
+ if(data.session){
+  status.textContent='تم إنشاء الحساب وتسجيل الدخول: '+email;
+ }else{
+  status.textContent='تم إنشاء الحساب. تحقق من بريدك لتأكيده.';
+ }
+ document.getElementById('authPassword').value='';
+}
+
+async function signIn(){
+ const email=document.getElementById('authEmail').value.trim();
+ const password=document.getElementById('authPassword').value;
+ const status=document.getElementById('authStatus');
+
+ if(!email || !password){
+  status.textContent='أدخل البريد الإلكتروني وكلمة المرور';
+  return;
+ }
+
+ status.textContent='جاري تسجيل الدخول...';
+ const {data,error}=await sbClient.auth.signInWithPassword({
+  email,password
+ });
+
+ if(error){
+  status.textContent='تعذر تسجيل الدخول: '+error.message;
+  return;
+ }
+
+ status.textContent='مرحباً بك: '+data.user.email;
+ document.getElementById('authPassword').value='';
+}
+
+async function signOut(){
+ const {error}=await sbClient.auth.signOut();
+ document.getElementById('authStatus').textContent=
+  error ? 'تعذر تسجيل الخروج: '+error.message : 'تم تسجيل الخروج';
+}
+
+async function resetPassword(){
+ const email=document.getElementById('authEmail').value.trim();
+ const status=document.getElementById('authStatus');
+
+ if(!email){
+  status.textContent='أدخل بريدك الإلكتروني أولاً';
+  return;
+ }
+
+ const {error}=await sbClient.auth.resetPasswordForEmail(email,{
+  redirectTo:window.location.origin
+ });
+
+ status.textContent=error
+  ? 'تعذر إرسال رابط الاستعادة: '+error.message
+  : 'تم إرسال رابط استعادة كلمة المرور إلى بريدك';
+}
+
+async function refreshAuthStatus(){
+ const status=document.getElementById('authStatus');
+ const {data,error}=await sbClient.auth.getSession();
+
+ if(error){
+  status.textContent='تعذر التحقق من الحساب';
+  return;
+ }
+
+ status.textContent=data.session
+  ? 'مسجل الدخول: '+data.session.user.email
+  : 'غير مسجل الدخول';
+}
+
+sbClient.auth.onAuthStateChange((_event,session)=>{
+ const status=document.getElementById('authStatus');
+ if(status){
+  status.textContent=session
+   ? 'مسجل الدخول: '+session.user.email
+   : 'غير مسجل الدخول';
+ }
+});
+
+refreshAuthStatus().catch(error=>{
+ document.getElementById('authStatus').textContent=
+  'تعذر الاتصال بخدمة الحسابات';
+});
+
+</script>
+</body>
+</html>

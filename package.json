@@ -1,0 +1,25 @@
+{
+  "name": "zoyy-ai",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@capacitor/android": "^8.6.2",
+    "@capacitor/cli": "^8.6.2",
+    "@capacitor/core": "^8.6.2",
+    "@google/genai": "^2.32.0",
+    "dotenv": "^18.0.10",
+    "express": "^5.3.0",
+    "openai": "^4.104.0"
+  },
+  "devDependencies": {
+    "netlify-cli": "^27.20.1"
+  }
+}
