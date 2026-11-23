@@ -1,9 +1,20 @@
 const { GoogleGenAI } = require("@google/genai");
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Content-Type": "application/json"
+};
+
 exports.handler = async (event) => {
+  if (event.httpMethod === "OPTIONS") {
+    return { statusCode: 204, headers: corsHeaders, body: "" };
+  }
   if (event.httpMethod !== "POST") {
     return {
       statusCode: 405,
+      headers: corsHeaders,
       body: JSON.stringify({ error: "Method not allowed" })
     };
   }
@@ -14,6 +25,7 @@ exports.handler = async (event) => {
     if (!apiKey) {
       return {
         statusCode: 503,
+      headers: corsHeaders,
         body: JSON.stringify({ error: "Gemini key is missing" })
       };
     }
@@ -23,6 +35,7 @@ exports.handler = async (event) => {
     if (typeof message !== "string" || !Array.isArray(images) || (!message.trim() && images.length === 0) || images.length > 4 || images.some(x => !x || !["image/jpeg","image/png","image/webp"].includes(x.mimeType) || typeof x.data !== "string" || x.data.length > 5500000) || images.reduce((n,x) => n + (x.data || "").length,0) > 5500000) {
       return {
         statusCode: 400,
+      headers: corsHeaders,
         body: JSON.stringify({ error: "اكتب رسالة صحيحة" })
       };
     }
@@ -50,7 +63,7 @@ exports.handler = async (event) => {
 
     return {
       statusCode: 200,
-      headers: { "Content-Type": "application/json" },
+      headers: corsHeaders,
       body: JSON.stringify({
         reply: response.text || "لم يصل رد من Gemini"
       })
@@ -61,6 +74,7 @@ exports.handler = async (event) => {
 
     return {
       statusCode: 500,
+      headers: corsHeaders,
       body: JSON.stringify({
         error: "حدث خطأ أثناء الاتصال بالذكاء الاصطناعي"
       })
